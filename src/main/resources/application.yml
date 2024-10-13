@@ -1,0 +1,22 @@
+server:
+  port: 8080
+  shutdown: graceful
+  forward-headers-strategy: framework
+
+
+
+rest-api-idempotency:
+  enabled: true
+  uri-patters:
+    - (/remove-me)$
+    - (/remove-me/get/[0-9]+)$
+  error-scenarios-response:
+    invalid-key:
+        message: Invalid key
+        status: 400
+    operation-in-progress:
+        message: Operation in progress
+        status: 400
+    operation-already-performed:
+        message: Operation already performed
+        status: 400
