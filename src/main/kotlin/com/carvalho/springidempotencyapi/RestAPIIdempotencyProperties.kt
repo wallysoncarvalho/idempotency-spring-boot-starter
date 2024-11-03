@@ -1,6 +1,7 @@
 package com.carvalho.springidempotencyapi
 
 import org.springframework.boot.context.properties.ConfigurationProperties
+import org.springframework.boot.context.properties.bind.ConstructorBinding
 import org.springframework.context.annotation.Configuration
 
 @Configuration
@@ -8,8 +9,8 @@ import org.springframework.context.annotation.Configuration
 data class RestAPIIdempotencyProperties(
     var enabled: Boolean = false,
     var uriPatters: List<String> = emptyList(),
-    var errorScenariosResponse: ErrorScenariosResponse
-){
+    var errorsResponse: ErrorsResponse = ErrorsResponse()
+) {
 
     fun uriMatch(uri: String): Boolean {
         return uriPatters.any { uri.matches(it.toRegex()) }
@@ -19,11 +20,11 @@ data class RestAPIIdempotencyProperties(
         return uriPatters.find { uri.matches(it.toRegex()) }
     }
 
-    data class ErrorScenariosResponse(
-        var invalidKey: ErrorScenario = ErrorScenario(),
-        var operationInProgress: ErrorScenario = ErrorScenario(),
-        var operationAlreadyPerformed: ErrorScenario = ErrorScenario()
+    data class ErrorsResponse(
+        var invalidKey: ErrorScenario = ErrorScenario(400, "Invalid key"),
+        var inProgress: ErrorScenario = ErrorScenario(409, "Operation in progress"),
+        var alreadyPerformed: ErrorScenario = ErrorScenario(409, "Operation already performed")
     )
 
-    data class ErrorScenario(var status: Int = 400, var message: String = "")
+    data class ErrorScenario(var status: Int, var message: String)
 }

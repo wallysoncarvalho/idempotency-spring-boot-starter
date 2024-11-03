@@ -10,13 +10,13 @@ rest-api-idempotency:
   uri-patters:
     - (/remove-me)$
     - (/remove-me/get/[0-9]+)$
-  error-scenarios-response:
+  errors-response:
     invalid-key:
         message: Invalid key
         status: 400
-    operation-in-progress:
+    in-progress:
         message: Operation in progress
         status: 400
-    operation-already-performed:
+    already-performed:
         message: Operation already performed
         status: 400
