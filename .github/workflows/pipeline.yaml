@@ -21,7 +21,7 @@ jobs:
           distribution: 'temurin'
           java-version: '17'
       - uses: gradle/actions/setup-gradle@v4
-      - run: "./gradlew test -x detekt -x check"
+      - run: "./gradlew test"
 
   publish:
     runs-on: ubuntu-latest
