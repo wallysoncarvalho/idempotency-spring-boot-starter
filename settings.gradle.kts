@@ -1,1 +1,1 @@
-rootProject.name = "rest-api-idempotency"
+rootProject.name = "idempotency-spring-boot-starter"
