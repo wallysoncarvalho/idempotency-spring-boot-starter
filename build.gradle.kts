@@ -50,4 +50,15 @@ publishing {
 			from(components["java"])
 		}
 	}
+
+	repositories {
+		maven {
+			name = "GitHubPackages"
+			url = uri("https://maven.pkg.github.com/wallysoncarvalho/idempotency-spring-boot-starter")
+			credentials {
+				username = project.findProperty("gpr.user") as String? ?: System.getenv("USERNAME")
+				password = project.findProperty("gpr.token") as String? ?: System.getenv("GITHUB_TOKEN")
+			}
+		}
+	}
 }
