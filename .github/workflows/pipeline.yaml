@@ -5,6 +5,8 @@ on:
   push:
     branches:
       - main
+    paths:
+      - 'idempotency-spring-boot-starter/**'
 
 concurrency:
   group: deploy-${{ github.ref }}

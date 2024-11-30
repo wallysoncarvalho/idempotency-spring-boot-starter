@@ -6,6 +6,10 @@ import com.carvalho.idempotency.defaultimplementations.LocalEntryRepository
 import com.carvalho.idempotency.existingrequesthandlers.DuplicateRequest
 import com.carvalho.idempotency.existingrequesthandlers.InProgressRequest
 import com.carvalho.idempotency.existingrequesthandlers.InvalidIdempotencyKey
+import com.carvalho.idempotency.restapicomponents.ControllerAdvice
+import com.carvalho.idempotency.restapicomponents.CounterController
+import com.carvalho.idempotency.restapicomponents.Filter1
+import com.carvalho.idempotency.restapicomponents.Filter2
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.BeforeEach
 import org.springframework.http.MediaType
@@ -19,7 +23,7 @@ import java.util.UUID
 import kotlin.test.Test
 import kotlin.test.assertNull
 
-class IncrementStaticCounterControllerTest {
+class IdempotencyFilterOnControllerTests {
 
     private val properties = RestAPIIdempotencyProperties().apply {
         enabled = true
@@ -49,14 +53,14 @@ class IncrementStaticCounterControllerTest {
     )
 
     private val mockMvc = MockMvcBuilders
-        .standaloneSetup(IncrementStaticCounterController())
+        .standaloneSetup(CounterController())
         .setControllerAdvice(ControllerAdvice())
         .addFilters<StandaloneMockMvcBuilder>(idempotencyFilter)
         .build()
 
     @BeforeEach
     fun setUp() {
-        IncrementStaticCounterController.reset()
+        CounterController.reset()
     }
 
     @Test
@@ -76,7 +80,7 @@ class IncrementStaticCounterControllerTest {
                 .andExpect(content().json("""{"message": "Cont changed 1."}"""))
         }
 
-        assertEquals(1, IncrementStaticCounterController.cont)
+        assertEquals(1, CounterController.cont)
     }
 
     @Test
@@ -94,7 +98,7 @@ class IncrementStaticCounterControllerTest {
                 .andExpect(content().json("""{"message": "Cont changed."}"""))
         }
 
-        assertEquals(repetitions, IncrementStaticCounterController.contNonIdempotent)
+        assertEquals(repetitions, CounterController.contNonIdempotent)
     }
 
     @Test
@@ -162,5 +166,48 @@ class IncrementStaticCounterControllerTest {
         ).andDo(MockMvcResultHandlers.print()).andExpect(status().isBadRequest)
 
         assertNull(repository.getByKey("$idempotencyKey2:/return-bad-request:POST"))
+    }
+
+    @Test
+    fun `idempotency filter shouldn't impact other filters`() {
+        val mockMvcMoreFilters = MockMvcBuilders
+            .standaloneSetup(CounterController())
+            .setControllerAdvice(ControllerAdvice())
+            .addFilters<StandaloneMockMvcBuilder>(Filter1(), idempotencyFilter, Filter2())
+            .build()
+
+        val idempotencyKey = UUID.randomUUID().toString()
+
+        // execute the request calling the controller method
+        mockMvcMoreFilters.perform(
+            post("/increment")
+                .contentType(MediaType.APPLICATION_JSON)
+                .header("Idempotency-Key", idempotencyKey)
+                .content("""{"message": "Hello"}""")
+                .characterEncoding("UTF-8")
+        )
+            .andDo(MockMvcResultHandlers.print())
+            .andExpect(status().isAccepted)
+            .andExpect(content().json("""{"message": "Cont changed 1."}"""))
+            .andExpect { result ->
+                assertEquals("true", result.response.getHeader("Filter1"))
+                assertEquals("true", result.response.getHeader("Filter2"))
+            }
+
+        // execute the same idempotent request expecting others filters changes to be returned
+        mockMvcMoreFilters.perform(
+            post("/increment")
+                .contentType(MediaType.APPLICATION_JSON)
+                .header("Idempotency-Key", idempotencyKey)
+                .content("""{"message": "Hello"}""")
+                .characterEncoding("UTF-8")
+        )
+            .andDo(MockMvcResultHandlers.print())
+            .andExpect(status().isAccepted)
+            .andExpect(content().json("""{"message": "Cont changed 1."}"""))
+            .andExpect { result ->
+                assertEquals("true", result.response.getHeader("Filter1"))
+                assertEquals("true", result.response.getHeader("Filter2"))
+            }
     }
 }

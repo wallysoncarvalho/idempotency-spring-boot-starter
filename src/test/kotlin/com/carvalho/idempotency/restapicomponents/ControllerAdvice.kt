@@ -1,4 +1,4 @@
-package com.carvalho.idempotency
+package com.carvalho.idempotency.restapicomponents
 
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity

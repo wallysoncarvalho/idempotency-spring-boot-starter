@@ -1,4 +1,4 @@
-package com.carvalho.idempotency
+package com.carvalho.idempotency.restapicomponents
 
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
@@ -10,11 +10,11 @@ import org.springframework.web.bind.annotation.RestController
 
 @RestController
 @RequestMapping
-class IncrementStaticCounterController {
+class CounterController {
 
     @PostMapping("/increment")
     @ResponseStatus(HttpStatus.ACCEPTED)
-    fun increment(@RequestBody request: Request): Response{
+    fun increment(@RequestBody request: Request): Response {
         cont++
 
         return Response("Cont changed $cont.")
